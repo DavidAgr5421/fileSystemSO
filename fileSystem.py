@@ -21,6 +21,14 @@ class Explorer():
         self.files = []
         self.recycleBin = []
 
+    def freeDisk(self):
+        free = self.diskSize
+        for file in self.files:
+            free -= file.size
+        for file in self.recycleBin:
+            free -= file.size
+        return free
+
     def findFreeBlocks(self, neededBlocks):
         index = []
         for i in range(self.totalBlocks):
@@ -57,10 +65,21 @@ class Explorer():
                     self.disk[i] = None
             self.recycleBin.remove(file)
         return print("Su papelera de reciclaje ha sido vaciado correctamente.")
+    
+    def readFile(self, fileName):
+        for file in self.files:
+            if file.name == fileName:
+                print(f"Su archivo {fileName} se ha encontrado: ")
+                return print(file)
+        for file in self.recycleBin:
+            if file.name == fileName:
+                print(f"Su archivo {fileName} se encuentra en la papelera: ")
+                return print(file)
+        return print(f"El archivo {fileName} no se encuentra")
 
     def __str__(self):
         info = f"--- Explorador ---\n"
-        info += f"Tamano disco: {self.diskSize}\n"
+        info += f"Tamano disco disponible: {self.freeDisk()}\n"
         info += f"Tamano bloque: {self.blockSize}\n"
         info += f"Total bloques: {self.totalBlocks}\n"
         info += f"- Bloques libres: {self.disk.count(None)}\n"
@@ -87,12 +106,17 @@ if __name__ == "__main__":
     explorer = Explorer(diskSize=100, blockSize=10)
 
     file1 = File("hola", 10, "txt")
+    file2 = File("petuche", 30, "mp4")
     print(file1)
 
     print(explorer)
     explorer.createFile(file1)
+    explorer.readFile("hola")
     print(explorer)
     explorer.deleteFile("hola")
+    explorer.readFile("hola")
+    print(explorer)
+    explorer.createFile(file2)
     print(explorer)
     explorer.cleanBin()
     print(explorer)
