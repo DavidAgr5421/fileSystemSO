@@ -58,30 +58,30 @@ class Explorer():
             self.recycleBin.remove(file)
         return print("Su papelera de reciclaje ha sido vaciado correctamente.")
 
-    def __str__(self): 
-        info = f"--- Explorador ---"
-        info += f"Tamano disco: {self.diskSize} \n"
-        info += f"Tamano bloque: {self.blockSize} \n"
+    def __str__(self):
+        info = f"--- Explorador ---\n"
+        info += f"Tamano disco: {self.diskSize}\n"
+        info += f"Tamano bloque: {self.blockSize}\n"
         info += f"Total bloques: {self.totalBlocks}\n"
-        info += f"-Bloques libres: {self.disk.count(None)}\n"
-        info += f"-Bloques ocupados: {self.totalBlocks - self.disk.count(None)}\n\n"
+        info += f"- Bloques libres: {self.disk.count(None)}\n"
+        info += f"- Bloques ocupados: {self.totalBlocks - self.disk.count(None)}\n\n"
 
-        info += f"--- Archivos --- :"
+        info += f"--- Archivos ---\n"
         if self.files:
             for f in self.files:
-                print(f)
+                info += str(f)
         else:
-            info += "no hay archivos en el disco\n"
+            info += "No hay archivos en el disco\n"
 
-        info += f"\n--- Papelera ---- :\n"
-
+        info += f"\n--- Papelera ---\n"
         if self.recycleBin:
             for f in self.recycleBin:
-                print(f)
+                info += str(f)
         else:
-            info += "papelera vacia\n"
+            info += "Papelera vacia\n"
 
         return info
+
 
 if __name__ == "__main__":
     explorer = Explorer(diskSize=100, blockSize=10)
@@ -89,4 +89,10 @@ if __name__ == "__main__":
     file1 = File("hola", 10, "txt")
     print(file1)
 
+    print(explorer)
+    explorer.createFile(file1)
+    print(explorer)
+    explorer.deleteFile("hola")
+    print(explorer)
+    explorer.cleanBin()
     print(explorer)
