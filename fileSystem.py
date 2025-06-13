@@ -12,18 +12,45 @@ class File:
     def __str__(self): 
         return f"Archivo: (nombre= {self.name}, Tamaño= {self.size}, formato= {self.format}, creado en = {self.created}, bloques= {self.blocks})\n"
 
+class Dir():
+    def __init__(self,name, parent=None):
+        self.name = name
+        self.parent = parent
+        self.files = []
+        self.subdir = []
+
+    def addFile(self,file):
+        self.files.append(file)
+
+    def addSubDir(self,subdir):
+        self.subdir.append(subdir)
+
+    def getPath(self):
+        if self.parent:
+            return self.parent.getPath() + "/" + self.name
+        return self.name
+
+    def __str__(self):
+        info = f"Directorio: {self.getPath()}\n"
+        for d in self.subdir:
+            info += f" <dir> {d.name}\n"
+        for f in self.files:
+            info += f" <archivo> {f.name}\n"
+        return info
+
 class Explorer():
     def __init__(self, diskSize, blockSize):
         self.diskSize = diskSize
         self.blockSize = blockSize
         self.totalBlocks = diskSize // blockSize
         self.disk = [None] * self.totalBlocks
-        self.files = []
+        self.root = Dir("root")
+        self.currentDir = self.root
         self.recycleBin = []
 
     def freeDisk(self):
         free = self.diskSize
-        for file in self.files:
+        for file in self.currentDir.files:
             free -= file.size
         for file in self.recycleBin:
             free -= file.size
@@ -48,18 +75,19 @@ class Explorer():
             for block in blocks:
                 self.disk[block] = file.name
             file.blocks = blocks
-            self.files.append(file)
-            return print(f"El archivo {file.name} se ha creado con exito")
+            self.currentDir.addFile(file)
+            return print(f"El archivo {file.name} se ha creado con exito en el directorio {self.currentDir.getPath()}")
 
     def deleteFile(self, fileName):
-        for file in self.files:
+        for file in self.currentDir.files:
             if file.name == fileName:
                 self.recycleBin.append(file)
-                self.files.remove(file)
+                self.currentDir.files.remove(file)
                 return print(f"Su archivo {file.name} ha sido movido a la papelera con exito")
+        return print(f"El archivo {fileName} no se encuentra")
 
     def cleanBin(self):
-        for file in self.recycleBin:
+        for file in self.recycleBin[:]:
             for i in range(len(self.disk)):
                 if self.disk[i] == file.name:
                     self.disk[i] = None
@@ -67,15 +95,38 @@ class Explorer():
         return print("Su papelera de reciclaje ha sido vaciado correctamente.")
     
     def readFile(self, fileName):
-        for file in self.files:
+        for file in self.currentDir.files:
             if file.name == fileName:
-                print(f"Su archivo {fileName} se ha encontrado: ")
+                print(f"Su archivo {fileName} se ha encontrado en el directorio {self.currentDir.getPath()} ")
                 return print(file)
         for file in self.recycleBin:
             if file.name == fileName:
                 print(f"Su archivo {fileName} se encuentra en la papelera: ")
                 return print(file)
         return print(f"El archivo {fileName} no se encuentra")
+
+    def createDir(self,name):
+        newDir = Dir(name,self.currentDir)
+        self.currentDir.addSubDir(newDir)
+        print(f"Directorio {name} creado en {self.currentDir.getPath()}")
+
+    def changeDir(self,name):
+        if name == "..":
+            if self.currentDir.parent is not None:
+                self.currentDir = self.currentDir.parent
+                print(f"Cambiado a {self.currentDir.getPath()}")
+            else:
+                print("Ya se encuentra en la raíz")
+        else:
+            for sub in self.currentDir.subdir:
+                if sub.name == name:
+                    self.currentDir = sub
+                    return print(f"-- {self.currentDir.getPath()}")
+            return print(f"No existe el subdirectorio {name}")
+
+    
+    def listDirectory(self):
+        print(self.currentDir)
 
     def __str__(self):
         info = f"--- Explorador ---\n"
@@ -86,8 +137,8 @@ class Explorer():
         info += f"- Bloques ocupados: {self.totalBlocks - self.disk.count(None)}\n\n"
 
         info += f"--- Archivos ---\n"
-        if self.files:
-            for f in self.files:
+        if self.currentDir.files:
+            for f in self.currentDir.files:
                 info += str(f)
         else:
             info += "No hay archivos en el disco\n"
@@ -107,16 +158,22 @@ if __name__ == "__main__":
 
     file1 = File("hola", 10, "txt")
     file2 = File("petuche", 30, "mp4")
-    print(file1)
+
+    explorer.createDir("docs")
+    explorer.createDir("media")
+    explorer.listDirectory()
+
+    explorer.changeDir("docs")
+    explorer.createFile(file1)
+    explorer.listDirectory()
+
+    explorer.changeDir("..")
+    explorer.changeDir("media")
+    explorer.createFile(file2)
+    explorer.listDirectory()
 
     print(explorer)
-    explorer.createFile(file1)
-    explorer.readFile("hola")
-    print(explorer)
-    explorer.deleteFile("hola")
-    explorer.readFile("hola")
-    print(explorer)
-    explorer.createFile(file2)
-    print(explorer)
+
+    explorer.deleteFile("petuche")
     explorer.cleanBin()
     print(explorer)
